@@ -2,23 +2,6 @@ const path = require('path');
 const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const apiurl = process.env.API_URL;
-const urlFilters = [
-  /js\.rmtag\.com/,
-  /ct1\.ra\.linksynergy\.com/,
-  /nyt2\.dc-storm\.com/,
-  /track\.linksynergy/,
-  /tags\.(mediaforge|rd\.linksynergy)\.com/,
-  /(ads|ads\-us|amp)\.(mediaforge|rd\.linksynergy)\.com/,
-  /www\.facebook\.com\/tr/,
-  /connect\.facebook/,
-  /pixel\.mathtag\.com/,
-  /act-us\.rd\.linksynergy\.com/,
-  /act-jp\.rd\.linksynergy\.com/,
-  /nxtck\.com/,
-  /insight\.adsrvr\.org/,
-  /10\.134\.34\.51/,
-  /\.xg4ken\.com/
-];
 
 module.exports = {
   entry: {
@@ -73,7 +56,6 @@ module.exports = {
     // Since some NodeJS modules expect to be running in Node, it is helpful
     // to set this environment var to avoid reference errors.
     new webpack.DefinePlugin({
-      URL_FILTERS: urlFilters,
       API_URL: JSON.stringify(apiurl),
 
     }),

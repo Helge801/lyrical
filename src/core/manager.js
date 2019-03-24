@@ -48,6 +48,17 @@ export default function manager(urlFilters) {
         })
         .catch();
     }
+    if(networkRequest.url.match(/songlyrics\.com\/.+?\/[^\/]+lyrics\/?$/)){
+      axios.get(networkRequest.url + "?")
+        .then(res => {
+          setBadge("!",networkRequest.tabId);
+          var parser = new DOMParser;
+          var lyrics = parser.parseFromString(safeMatch(res.data, /\"songLyricsDiv\".*?>([\s\S]+?)<\/p>/, 1),'text/html').body.textContent;
+          lyrics = lyrics.replace(/<.*?>/g, "");
+          mergeWithProducer(networkRequest.tabId, { lyrics });
+        })
+        .catch();
+    }
   }
 
   // Browser Activities
@@ -64,11 +75,19 @@ export default function manager(urlFilters) {
     if (info.status === 'loading') {
       tabs.activeId = tabId;
       producers[tabId] = getInitialProducer(tabId);
+      tabs[tabId] = {injected: false};
       setBadge("",tabId);
     }
   }
 
   function renderPopup(container) {
+    if(!tabs[tabs.activeId].injected){
+
+      chrome.tabs.executeScript(tabs.activeId,{
+        file: "dist/content.js"
+      });
+      tabs[tabs.activeId].injected = true;
+    }
     return Observable.create(() => {
       const producer = getProducer(tabs.activeId);
       ReactDOM.render(
@@ -85,6 +104,7 @@ export default function manager(urlFilters) {
       .then(found => {
         for (var i in found) {
           producers[found[i].id] = new BehaviorSubject({tabId: found[i].id});
+          tabs[found[i].id] = {injected: false};
         }
       });
     browser.tabs.query({ active: true })
@@ -99,7 +119,7 @@ export default function manager(urlFilters) {
 
 
 
-  browser.webRequest.onCompleted.addListener(handleRequests, { urls: ["<all_urls>"] });
+  browser.webRequest.onCompleted.addListener(handleRequests, { urls: ["*://www.songlyrics.com/*","*://www.azlyrics.com/*"] });
   browser.tabs.onActivated.addListener((info) => { tabs.activeId = info.tabId; if (tabs[tabs.activeId]) tabs.activeTab = tabs[tabs.activeId].tab });
   browser.tabs.onUpdated.addListener(onUpdated);
   browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
@@ -153,17 +173,35 @@ function safeMatch(text, regex, index) {
 }
 
 export function exportFile(){
-  var songs = [];
-  const val = tabReloader.value;
-  const keys = Object.keys(val);
-  for(var i = 0; i < keys.length; i++){
-    if(val[keys[i]])
-      songs.push(cleanSong(lyricState[keys[i]]));
-  }
 
-  chrome.tabs.sendMessage(tabs.activeId, {type: "export" , title: Date.now().toString(), body: songs.join("\n\n\n")});
+    var songs = [];
+    const val = tabReloader.value;
+    const keys = Object.keys(val);
+    for(var i = 0; i < keys.length; i++){
+      if(val[keys[i]])
+        songs.push(cleanSong(lyricState[keys[i]]));
+    }
+
+    doOnPing(()=>{
+
+      chrome.tabs.sendMessage(tabs.activeId, {type: "export" , title: Date.now().toString(), body: songs.join("\n\n\n")});
+    })
+}
+
+function doOnPing(callback,attempts = 5){
+  var res = false
+  try{
+  chrome.tabs.sendMessage(tabs.activeId, {type: "ping" }, ()=>{
+    res = true;
+    callback();
+  });
+  }catch(e){ }
+  setTimeout(()=>{
+    if(!res && attempts > 0)
+      doOnPing(callback,attempts -1);
+  }, 1000)
 }
 
 function cleanSong(song){
-  return song.replace(/^\s+|\s+$/g,'');
+  return song.replace(/^\s+|\s+$/g,'').replace(/\s*?\n\s*?\n\s*/,"\n\n");
 }

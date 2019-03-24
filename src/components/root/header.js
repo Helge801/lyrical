@@ -97,7 +97,6 @@ class Header extends Component {
       lyricState[keys[i]] = "";
       tabs[keys[i]] = null;
     }
-    console.log(lyricState);
     tabReloader.next(tabs);
     reloader.next({tab: "1",save: false});
   }

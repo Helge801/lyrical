@@ -11,6 +11,9 @@ import PptxGenJS from 'pptxgenjs';
       case 'export':
         exportPP(request, sendResponse);
         return;
+      case 'ping':
+        sendResponse();
+        return;
     }
 
   });

@@ -17,7 +17,6 @@ class EditBox extends Component {
 
   componentDidMount(){
     this.sub = reloader.subscribe(val => {
-      console.log(val);
       if(val){
         if(val.save) this.saveLyrics();
         this.state.tab = val.tab;
@@ -27,9 +26,7 @@ class EditBox extends Component {
   }
 
   saveLyrics(){
-    console.log(`saving: ${this.state.value}\nto: ${this.state.tab}`)
     lyricState[this.state.tab] = this.state.value;
-    console.log("lyricState: ", lyricState)
   }
 
   componentWillUnmount(){

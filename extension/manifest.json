@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Lyrical",
-  "version": "1.0.0",
+  "version": "1.0.1",
 
   "background": {
     "scripts": ["dist/background.js"]
@@ -21,18 +21,10 @@
     "128": "images/lyrical-icon-128.png"
   },
 
-  "content_scripts": [{
-    "matches":["*://*/*"],
-    "run_at":"document_idle",
-    "js":[
-      "dist/content.js"
-    ]
-  }],
-
   "permissions": [
     "activeTab",
     "webRequest",
-    "<all_urls>",
-    "tabs"
+    "http://www.songlyrics.com/*",
+    "https://www.azlyrics.com/*"
   ]
 }
